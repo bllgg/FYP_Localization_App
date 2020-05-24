@@ -77,9 +77,13 @@ public class MainActivity extends AppCompatActivity {
         AdvertisingSetParameters parameters = (new AdvertisingSetParameters.Builder())
                 .setLegacyMode(true) // True by default, but set here as a reminder.
                 .setConnectable(false)
-                .setInterval(AdvertisingSetParameters.INTERVAL_HIGH)
-                .setTxPowerLevel(AdvertisingSetParameters.TX_POWER_HIGH)
+                .setInterval(AdvertisingSetParameters.INTERVAL_MEDIUM)
+                .setTxPowerLevel(AdvertisingSetParameters.TX_POWER_MEDIUM)
                 .build();
+
+        /*
+        * int: Bluetooth LE Advertising interval, in 0.625ms unit. Valid range is from 160 (100ms) to 16777215 (10,485.759375 s). Recommended values are: AdvertisingSetParameters#INTERVAL_LOW, AdvertisingSetParameters#INTERVAL_MEDIUM, or AdvertisingSetParameters#INTERVAL_HIGH.
+        * */
         AdvertiseData data = (new AdvertiseData.Builder()).setIncludeDeviceName(true).build();
 
         final AdvertisingSet[] currentAdvertisingSet = new AdvertisingSet[1];
@@ -127,7 +131,9 @@ public class MainActivity extends AppCompatActivity {
                 while (true) {
                     if (currentAdvertisingSet[0] != null) {
                         num%=10;
-                        currentAdvertisingSet[0].setAdvertisingData(new AdvertiseData.Builder().addServiceUuid(ParcelUuid.fromString("dbc17e63-9c59-4037-a929-35d5000956d"+String.valueOf(num))).setIncludeDeviceName(name).setIncludeTxPowerLevel(true).build());
+                        //byte[] manufacturerData = new byte[12];
+                        //currentAdvertisingSet[0].setAdvertisingData(new AdvertiseData.Builder().addServiceUuid(ParcelUuid.fromString("ddcc7766-9955-4433-aa22-33dd009955"+String.valueOf(num)+String.valueOf(num))).setIncludeDeviceName(name).setIncludeTxPowerLevel(true).build());
+                        currentAdvertisingSet[0].setAdvertisingData(new AdvertiseData.Builder().addServiceUuid(ParcelUuid.fromString("ddcc7766-9955-4433-aa22-33dd009955"+String.valueOf(num)+String.valueOf(num))).setIncludeTxPowerLevel(true).build());
                         name = !name;
                         num += 1;
                         try {
