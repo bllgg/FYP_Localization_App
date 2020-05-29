@@ -131,9 +131,11 @@ public class MainActivity extends AppCompatActivity {
                 while (true) {
                     if (currentAdvertisingSet[0] != null) {
                         num%=10;
-                        //byte[] manufacturerData = new byte[12];
+                        byte[] service_data = {10, 20, 30, 40, 50, 60, 70, 80, 90, 10, 20, 30, 40, 50, 60, 70, 80, 90, 10, 20, 30, 40, 50, 60, 70, 80, 90};
+                        //byte[] service_data =
                         //currentAdvertisingSet[0].setAdvertisingData(new AdvertiseData.Builder().addServiceUuid(ParcelUuid.fromString("ddcc7766-9955-4433-aa22-33dd009955"+String.valueOf(num)+String.valueOf(num))).setIncludeDeviceName(name).setIncludeTxPowerLevel(true).build());
-                        currentAdvertisingSet[0].setAdvertisingData(new AdvertiseData.Builder().addServiceUuid(ParcelUuid.fromString("ddcc7766-9955-4433-aa22-33dd009955"+String.valueOf(num)+String.valueOf(num))).setIncludeTxPowerLevel(true).build());
+                        //currentAdvertisingSet[0].setAdvertisingData(new AdvertiseData.Builder().addServiceUuid(ParcelUuid.fromString("ddcc7766-9955-4433-aa22-33dd009955"+String.valueOf(num)+String.valueOf(num))).setIncludeTxPowerLevel(true).build());
+                        currentAdvertisingSet[0].setAdvertisingData(new AdvertiseData.Builder().addServiceData(ParcelUuid.fromString("ddcc7766-9955-4433-aa22-33dd009955"+String.valueOf(num)+String.valueOf(num)), service_data).setIncludeTxPowerLevel(true).build());
                         name = !name;
                         num += 1;
                         try {
