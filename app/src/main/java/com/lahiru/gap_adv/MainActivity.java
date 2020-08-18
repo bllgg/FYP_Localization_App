@@ -16,6 +16,9 @@ import android.os.Bundle;
 import android.os.ParcelUuid;
 import android.util.Log;
 
+import java.nio.ByteBuffer;
+import java.util.UUID;
+
 public class MainActivity extends AppCompatActivity {
 
     private static final String TAG = "BLE ADV";
@@ -67,6 +70,7 @@ public class MainActivity extends AppCompatActivity {
         }*/
 
         final String LOG_TAG= "App_LOG";
+
         ////////////////////////////////////////////////////////////////////////////////////
         BluetoothAdapter adapter = BluetoothAdapter.getDefaultAdapter();
         if (!adapter.isLeCodedPhySupported()) {
@@ -77,8 +81,8 @@ public class MainActivity extends AppCompatActivity {
         AdvertisingSetParameters parameters = (new AdvertisingSetParameters.Builder())
                 .setLegacyMode(true) // True by default, but set here as a reminder.
                 .setConnectable(false)
-                .setInterval(AdvertisingSetParameters.INTERVAL_MEDIUM)
-                .setTxPowerLevel(AdvertisingSetParameters.TX_POWER_MEDIUM)
+                .setInterval(AdvertisingSetParameters.INTERVAL_HIGH)
+                .setTxPowerLevel(AdvertisingSetParameters.TX_POWER_MAX)
                 .build();
 
         /*
@@ -128,14 +132,35 @@ public class MainActivity extends AppCompatActivity {
                 // Perform thread commands...
                 boolean name = true;
                 int num = 0;
+                byte net_id = (byte)0xaa;
+                short acc_x = 0x1122;
+                short acc_y = 0x3344;
+                short acc_z = 0x5566;
+                short gyr_x = 0x1122;
+                short gyr_y = 0x3344;
+                short gyr_z = 0x5566;
+                short mag_x = 0x1122;
+                short mag_y = 0x3344;
+                short mag_z = 0x5566;
                 while (true) {
                     if (currentAdvertisingSet[0] != null) {
                         num%=10;
-                        byte[] service_data = {10, 20, 30, 40, 50, 60, 70, 80, 90, 10, 20, 30, 40, 50, 60, 70, 80, 90, 10, 20, 30, 40, 50, 60, 70, 80, 90};
-                        //byte[] service_data =
+                        //byte[] service_data = {net_id, (byte)(acc_x >> 8), (byte)(acc_x), (byte)(acc_y >> 8), (byte)(acc_y), (byte)(acc_z >> 8), (byte)(acc_z), (byte)(mag_x), (byte)(mag_x), (byte)(mag_y), (byte)(mag_y), (byte)(mag_z), (byte)(mag_z), (byte)(gyr_x), (byte)(gyr_x), (byte)(gyr_y), (byte)(gyr_y), (byte)(gyr_z), (byte)(gyr_z)};
+                        //byte[] service_uuid = {0x11, 0x22, 0x33, 0x44, 0x55, 0x66, 0x77, 0x11, 0x22, 0x33, 0x44, 0x55, 0x66, 0x77, 0x11, 0x22};
+                        byte[] service_data = {(byte)(mag_y >> 8), (byte)(mag_y), (byte)(mag_z >> 8), (byte)(mag_z), (byte)(gyr_x >> 8), (byte)(gyr_x), (byte)(gyr_y >> 8), (byte)(gyr_y), (byte)(gyr_z >> 8), (byte)(gyr_z),5,7,10};//, (byte)(gyr_z >> 8), (byte)(gyr_z)};
                         //currentAdvertisingSet[0].setAdvertisingData(new AdvertiseData.Builder().addServiceUuid(ParcelUuid.fromString("ddcc7766-9955-4433-aa22-33dd009955"+String.valueOf(num)+String.valueOf(num))).setIncludeDeviceName(name).setIncludeTxPowerLevel(true).build());
                         //currentAdvertisingSet[0].setAdvertisingData(new AdvertiseData.Builder().addServiceUuid(ParcelUuid.fromString("ddcc7766-9955-4433-aa22-33dd009955"+String.valueOf(num)+String.valueOf(num))).setIncludeTxPowerLevel(true).build());
-                        currentAdvertisingSet[0].setAdvertisingData(new AdvertiseData.Builder().addServiceData(ParcelUuid.fromString("ddcc7766-9955-4433-aa22-33dd009955"+String.valueOf(num)+String.valueOf(num)), service_data).setIncludeTxPowerLevel(true).build());
+                        //currentAdvertisingSet[0].setAdvertisingData(new AdvertiseData.Builder().addServiceData(ParcelUuid.fromString((byte)(mag_x >> 8)+(byte)mag_x+"ddcc7766-9955-4433-aa22-33dd0099"), service_data).setIncludeTxPowerLevel(true).build());
+
+                        byte[] b = {0,1,2,3,4,5,6,7,8,9,9,1,2,3,4,5};
+                        ByteBuffer bb = ByteBuffer.wrap(b);
+                        long f_l = bb.getLong();
+                        long s_l = bb.getLong();
+                        UUID k = new UUID(f_l, s_l);
+                        ParcelUuid l = new ParcelUuid(k);
+                        currentAdvertisingSet[0].setAdvertisingData(new AdvertiseData.Builder().addServiceData(l, service_data).setIncludeTxPowerLevel(false).build());
+                        //currentAdvertisingSet[0].setAdvertisingData(new AdvertiseData.Builder().addServiceData(ParcelUuid.fromString((acc_x >> 8)+(acc_x)+(acc_y >> 8)+(acc_y)+(acc_z >> 8)+(acc_z)+(mag_x >> 8)+(mag_x)+"-9955-4433-aa22-33dd009955cc"), service_data).setIncludeTxPowerLevel(true).build());
+
                         name = !name;
                         num += 1;
                         try {
