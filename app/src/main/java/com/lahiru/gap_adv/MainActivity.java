@@ -11,17 +11,76 @@ import android.bluetooth.le.AdvertisingSet;
 import android.bluetooth.le.AdvertisingSetCallback;
 import android.bluetooth.le.AdvertisingSetParameters;
 import android.bluetooth.le.BluetoothLeAdvertiser;
+import android.content.Context;
+import android.hardware.Sensor;
+import android.hardware.SensorEvent;
+import android.hardware.SensorEventListener;
+import android.hardware.SensorManager;
 import android.os.Build;
 import android.os.Bundle;
 import android.os.ParcelUuid;
 import android.util.Log;
+import android.widget.Toast;
 
 import java.nio.ByteBuffer;
+import java.util.List;
 import java.util.UUID;
 
 public class MainActivity extends AppCompatActivity {
 
     private static final String TAG = "BLE ADV";
+
+    protected static byte seq_num = 0;
+    protected static final short dev_id = 0x00FF;
+
+
+    /////////////////////////////////////////////////////////////////////////////
+
+    private SensorManager sensorManager;
+    private Sensor sensor;
+    private List list_acc, list_gyro, list_mag;
+
+    short acc_x, acc_y, acc_z, gyr_x, gyr_y, gyr_z, mag_x, mag_y, mag_z;
+
+    SensorEventListener sel_gyro = new SensorEventListener(){
+        @Override
+        public void onAccuracyChanged(Sensor sensor, int accuracy) {}
+        @Override
+        public void onSensorChanged(SensorEvent event) {
+            float[] values = event.values;
+            //scnd_txt.setText("GYROSCOPE\nx axis: "+values[0]+"\ny axis: "+values[1]+"\nz axis: "+values[2]);
+            gyr_x = gyro_revert(values[0]);
+            gyr_y = gyro_revert(values[1]);
+            gyr_z = gyro_revert(values[2]);
+        }
+    };
+
+    SensorEventListener sel_mag = new SensorEventListener(){
+        @Override
+        public void onAccuracyChanged(Sensor sensor, int accuracy) {}
+        @Override
+        public void onSensorChanged(SensorEvent event) {
+            float[] values = event.values;
+            //text.setText("MAGNETOMETER\nx axis: "+values[0]+"\ny axis: "+values[1]+"\nz axis: "+values[2]);
+            mag_x = mag_revert(values[0]);
+            mag_y = mag_revert(values[1]);
+            mag_z = mag_revert(values[2]);
+        }
+    };
+
+    SensorEventListener sel_acc = new SensorEventListener() {
+        @Override
+        public void onAccuracyChanged(Sensor sensor, int accuracy) {}
+        @Override
+        public void onSensorChanged(SensorEvent event) {
+            float[] values = event.values;
+            //third_txt.setText("ACCELERATION\nx axis: "+values[0]+"\ny axis: "+values[1]+"\nz axis: "+values[2]);
+            acc_x = acc_revert(values[0]);
+            acc_y = acc_revert(values[1]);
+            acc_z = acc_revert(values[2]);
+        }
+    };
+    ////////////////////////////////////////////////////////////////////////////
 
     @RequiresApi(api = Build.VERSION_CODES.O)
     @Override
@@ -29,60 +88,48 @@ public class MainActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
 
-        /*BluetoothAdapter bluetoothAdapter = BluetoothAdapter.getDefaultAdapter();;
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP && bluetoothAdapter.isMultipleAdvertisementSupported())
-        {
-            BluetoothLeAdvertiser advertiser = bluetoothAdapter.getBluetoothLeAdvertiser();
-
-            AdvertiseData.Builder dataBuilder = new AdvertiseData.Builder();
-            //Define a service UUID according to your needs
-            dataBuilder.addServiceUuid(ParcelUuid.fromString("231def14-fcdb-4f59-96ad-02f49c4972c1"));
-            dataBuilder.setIncludeDeviceName(true);
-            dataBuilder.setIncludeTxPowerLevel(true);
-
-
-            AdvertiseSettings.Builder settingsBuilder = new AdvertiseSettings.Builder();
-            settingsBuilder.setAdvertiseMode(AdvertiseSettings.ADVERTISE_MODE_LOW_POWER);
-            settingsBuilder.setTimeout(0);
-            settingsBuilder.setTxPowerLevel(AdvertiseSettings.ADVERTISE_TX_POWER_HIGH);
-
-            //Use the connectable flag if you intend on opening a Gatt Server
-            //to allow remote connections to your device.
-            settingsBuilder.setConnectable(false);
-
-            AdvertiseCallback advertiseCallback=new AdvertiseCallback() {
-                @Override
-                public void onStartSuccess(AdvertiseSettings settingsInEffect) {
-                    super.onStartSuccess(settingsInEffect);
-                    Log.i(TAG, "onStartSuccess: ");
-                }
-
-                @Override
-                public void onStartFailure(int errorCode) {
-                    super.onStartFailure(errorCode);
-                    Log.e(TAG, "onStartFailure: "+errorCode );
-                }
-            };
-            advertiser.startAdvertising(settingsBuilder.build(),dataBuilder.build(),advertiseCallback);
-            //advertiser.stopAdvertising(advertiseCallback);
-            //dataBuilder.addServiceUuid(ParcelUuid.fromString("fed8d908-3931-4d1c-94ca-b63e8e056815"));
-            //advertiser.startAdvertising(settingsBuilder.build(),dataBuilder.build(),advertiseCallback);
-        }*/
-
         final String LOG_TAG= "App_LOG";
 
         ////////////////////////////////////////////////////////////////////////////////////
-        BluetoothAdapter adapter = BluetoothAdapter.getDefaultAdapter();
-        if (!adapter.isLeCodedPhySupported()) {
-            Log.i(LOG_TAG, "BLE Periodic Advertising supported!");
+        sensorManager = (SensorManager) getSystemService(Context.SENSOR_SERVICE);
+        sensor = sensorManager.getDefaultSensor(Sensor.TYPE_MAGNETIC_FIELD);
+
+        list_mag = sensorManager.getSensorList(Sensor.TYPE_MAGNETIC_FIELD);
+        list_acc = sensorManager.getSensorList(Sensor.TYPE_ACCELEROMETER);
+        list_gyro = sensorManager.getSensorList(Sensor.TYPE_GYROSCOPE);
+
+        if(list_acc.size()>0){
+            sensorManager.registerListener(sel_acc, (Sensor) list_acc.get(0), SensorManager.SENSOR_DELAY_FASTEST); // in here we register the sensors to the variables.
+        }else{
+            Toast.makeText(getBaseContext(), "Error: No Accelerometer.", Toast.LENGTH_LONG).show();
         }
+
+        if(list_mag.size()>0){
+            sensorManager.registerListener(sel_mag, (Sensor) list_mag.get(0), SensorManager.SENSOR_DELAY_FASTEST); // in here we register the sensors to the variables.
+        }else{
+            Toast.makeText(getBaseContext(), "Error: No Magnetometer.", Toast.LENGTH_LONG).show();
+        }
+
+        if(list_gyro.size()>0){
+            sensorManager.registerListener(sel_gyro, (Sensor) list_gyro.get(0), SensorManager.SENSOR_DELAY_FASTEST);  // here also we register the sensors to the variables.
+        }else{
+            Toast.makeText(getBaseContext(), "Error: No Gyroscope.", Toast.LENGTH_LONG).show();
+        }
+
+        ////////////////////////////////////////////////////////////////////////////////////
+
+        ////////////////////////////////////////////////////////////////////////////////////
+        BluetoothAdapter adapter = BluetoothAdapter.getDefaultAdapter();                  //
+        if (!adapter.isLeCodedPhySupported()) {                                           //
+            Log.i(LOG_TAG, "BLE Periodic Advertising supported!");                   //
+        }                                                                                 //
         ////////////////////////////////////////////////////////////////////////////////////
         BluetoothLeAdvertiser advertiser = BluetoothAdapter.getDefaultAdapter().getBluetoothLeAdvertiser();
         AdvertisingSetParameters parameters = (new AdvertisingSetParameters.Builder())
                 .setLegacyMode(true) // True by default, but set here as a reminder.
                 .setConnectable(false)
                 .setInterval(AdvertisingSetParameters.INTERVAL_HIGH)
-                .setTxPowerLevel(AdvertisingSetParameters.TX_POWER_MAX)
+                .setTxPowerLevel(AdvertisingSetParameters.TX_POWER_ULTRA_LOW)
                 .build();
 
         /*
@@ -130,29 +177,20 @@ public class MainActivity extends AppCompatActivity {
             @Override
             public void run() {
                 // Perform thread commands...
-                boolean name = true;
-                int num = 0;
-                byte net_id = (byte)0xaa;
-                short acc_x = 0x1122;
-                short acc_y = 0x3344;
-                short acc_z = 0x5566;
-                short gyr_x = 0x1122;
-                short gyr_y = 0x3344;
-                short gyr_z = 0x5566;
-                short mag_x = 0x1122;
-                short mag_y = 0x3344;
-                short mag_z = 0x5566;
+                //boolean name = true;
+                //int num = 0;
+
                 while (true) {
                     if (currentAdvertisingSet[0] != null) {
-                        num%=10;
+                        //num%=10;
                         //byte[] service_data = {net_id, (byte)(acc_x >> 8), (byte)(acc_x), (byte)(acc_y >> 8), (byte)(acc_y), (byte)(acc_z >> 8), (byte)(acc_z), (byte)(mag_x), (byte)(mag_x), (byte)(mag_y), (byte)(mag_y), (byte)(mag_z), (byte)(mag_z), (byte)(gyr_x), (byte)(gyr_x), (byte)(gyr_y), (byte)(gyr_y), (byte)(gyr_z), (byte)(gyr_z)};
                         //byte[] service_uuid = {0x11, 0x22, 0x33, 0x44, 0x55, 0x66, 0x77, 0x11, 0x22, 0x33, 0x44, 0x55, 0x66, 0x77, 0x11, 0x22};
-                        byte[] service_data = {(byte)(mag_y >> 8), (byte)(mag_y), (byte)(mag_z >> 8), (byte)(mag_z), (byte)(gyr_x >> 8), (byte)(gyr_x), (byte)(gyr_y >> 8), (byte)(gyr_y), (byte)(gyr_z >> 8), (byte)(gyr_z),5,7,10};//, (byte)(gyr_z >> 8), (byte)(gyr_z)};
+                        byte[] service_data = {(byte)(mag_x), (byte)(mag_y >> 8), (byte)(mag_y), (byte)(mag_z >> 8), (byte)(mag_z)};
                         //currentAdvertisingSet[0].setAdvertisingData(new AdvertiseData.Builder().addServiceUuid(ParcelUuid.fromString("ddcc7766-9955-4433-aa22-33dd009955"+String.valueOf(num)+String.valueOf(num))).setIncludeDeviceName(name).setIncludeTxPowerLevel(true).build());
                         //currentAdvertisingSet[0].setAdvertisingData(new AdvertiseData.Builder().addServiceUuid(ParcelUuid.fromString("ddcc7766-9955-4433-aa22-33dd009955"+String.valueOf(num)+String.valueOf(num))).setIncludeTxPowerLevel(true).build());
                         //currentAdvertisingSet[0].setAdvertisingData(new AdvertiseData.Builder().addServiceData(ParcelUuid.fromString((byte)(mag_x >> 8)+(byte)mag_x+"ddcc7766-9955-4433-aa22-33dd0099"), service_data).setIncludeTxPowerLevel(true).build());
 
-                        byte[] b = {0,1,2,3,4,5,6,7,8,9,9,1,2,3,4,5};
+                        byte[] b = {(byte)(mag_x >> 8), (byte)(gyr_z), (byte)(gyr_z >> 8), (byte)(gyr_y), (byte)(gyr_y >> 8), (byte)(gyr_x), (byte)(gyr_x >> 8), (byte)(acc_z), (byte)(acc_z >> 8), (byte)(acc_y), (byte)(acc_y >> 8), (byte)(acc_x), (byte)(acc_x >> 8), (byte)(dev_id), (byte)(dev_id >> 8), seq_num};
                         ByteBuffer bb = ByteBuffer.wrap(b);
                         long f_l = bb.getLong();
                         long s_l = bb.getLong();
@@ -161,8 +199,7 @@ public class MainActivity extends AppCompatActivity {
                         currentAdvertisingSet[0].setAdvertisingData(new AdvertiseData.Builder().addServiceData(l, service_data).setIncludeTxPowerLevel(false).build());
                         //currentAdvertisingSet[0].setAdvertisingData(new AdvertiseData.Builder().addServiceData(ParcelUuid.fromString((acc_x >> 8)+(acc_x)+(acc_y >> 8)+(acc_y)+(acc_z >> 8)+(acc_z)+(mag_x >> 8)+(mag_x)+"-9955-4433-aa22-33dd009955cc"), service_data).setIncludeTxPowerLevel(true).build());
 
-                        name = !name;
-                        num += 1;
+                        seq_num += 1;
                         try {
                             synchronized (this) {
                                 this.wait(2000);
@@ -184,5 +221,40 @@ public class MainActivity extends AppCompatActivity {
         };
         mThread.start();
         //currentAdvertisingSet[0].setAdvertisingData(new AdvertiseData.Builder().setIncludeDeviceName(true).setIncludeTxPowerLevel(true).build());
+
+    }
+
+    @Override
+    protected void onStop() {
+        if (list_gyro.size()>0){
+            sensorManager.unregisterListener(sel_gyro);
+        }
+
+        if (list_mag.size()>0){
+            sensorManager.unregisterListener(sel_mag);
+        }
+
+        if (list_acc.size() > 0){
+            sensorManager.unregisterListener((sel_acc));
+        }
+        super.onStop();
+    }
+
+    static short acc_revert(float data) {
+        short res;
+        res = (short) ((data) * (32768.0 / 16.0));
+        return res;
+    }
+
+    static short gyro_revert(float data){
+        short res;
+        res = (short) ((data) * (32768.0 / 250.0));
+        return res;
+    }
+
+    static short mag_revert(float data) {
+        short res;
+        res = (short) ((data) * (32768.0 / 300.0));
+        return res;
     }
 }
