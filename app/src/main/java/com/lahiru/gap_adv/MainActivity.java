@@ -48,7 +48,7 @@ public class MainActivity extends AppCompatActivity {
         @Override
         public void onSensorChanged(SensorEvent event) {
             float[] values = event.values;
-            //scnd_txt.setText("GYROSCOPE\nx axis: "+values[0]+"\ny axis: "+values[1]+"\nz axis: "+values[2]);
+
             gyr_x = gyro_revert(values[0]);
             gyr_y = gyro_revert(values[1]);
             gyr_z = gyro_revert(values[2]);
@@ -61,7 +61,7 @@ public class MainActivity extends AppCompatActivity {
         @Override
         public void onSensorChanged(SensorEvent event) {
             float[] values = event.values;
-            //text.setText("MAGNETOMETER\nx axis: "+values[0]+"\ny axis: "+values[1]+"\nz axis: "+values[2]);
+
             mag_x = mag_revert(values[0]);
             mag_y = mag_revert(values[1]);
             mag_z = mag_revert(values[2]);
@@ -74,7 +74,7 @@ public class MainActivity extends AppCompatActivity {
         @Override
         public void onSensorChanged(SensorEvent event) {
             float[] values = event.values;
-            //third_txt.setText("ACCELERATION\nx axis: "+values[0]+"\ny axis: "+values[1]+"\nz axis: "+values[2]);
+            
             acc_x = acc_revert(values[0]);
             acc_y = acc_revert(values[1]);
             acc_z = acc_revert(values[2]);
@@ -129,7 +129,7 @@ public class MainActivity extends AppCompatActivity {
                 .setLegacyMode(true) // True by default, but set here as a reminder.
                 .setConnectable(false)
                 .setInterval(AdvertisingSetParameters.INTERVAL_HIGH)
-                .setTxPowerLevel(AdvertisingSetParameters.TX_POWER_ULTRA_LOW)
+                .setTxPowerLevel(AdvertisingSetParameters.TX_POWER_MEDIUM)
                 .build();
 
         /*
@@ -151,8 +151,6 @@ public class MainActivity extends AppCompatActivity {
                 }
                 else {
                     Log.i(LOG_TAG, "Advertising data is not null");
-                    //currentAdvertisingSet[0].setAdvertisingData(new AdvertiseData.Builder().addServiceData(ParcelUuid.fromString("ebc17e63-9c59-4037-a929-35d5000956dd"),"example".getBytes()).setIncludeDeviceName(true).setIncludeTxPowerLevel(true).build());
-                    //currentAdvertisingSet[0].setAdvertisingData(new AdvertiseData.Builder().addServiceUuid(ParcelUuid.fromString("ebc17e63-9c59-4037-a929-35d5000956dd")).setIncludeDeviceName(true).setIncludeTxPowerLevel(true).build());
                 }
             }
 
@@ -177,27 +175,19 @@ public class MainActivity extends AppCompatActivity {
             @Override
             public void run() {
                 // Perform thread commands...
-                //boolean name = true;
-                //int num = 0;
 
                 while (true) {
                     if (currentAdvertisingSet[0] != null) {
-                        //num%=10;
-                        //byte[] service_data = {net_id, (byte)(acc_x >> 8), (byte)(acc_x), (byte)(acc_y >> 8), (byte)(acc_y), (byte)(acc_z >> 8), (byte)(acc_z), (byte)(mag_x), (byte)(mag_x), (byte)(mag_y), (byte)(mag_y), (byte)(mag_z), (byte)(mag_z), (byte)(gyr_x), (byte)(gyr_x), (byte)(gyr_y), (byte)(gyr_y), (byte)(gyr_z), (byte)(gyr_z)};
-                        //byte[] service_uuid = {0x11, 0x22, 0x33, 0x44, 0x55, 0x66, 0x77, 0x11, 0x22, 0x33, 0x44, 0x55, 0x66, 0x77, 0x11, 0x22};
+
                         byte[] service_data = {(byte)(mag_x), (byte)(mag_y >> 8), (byte)(mag_y), (byte)(mag_z >> 8), (byte)(mag_z)};
-                        //currentAdvertisingSet[0].setAdvertisingData(new AdvertiseData.Builder().addServiceUuid(ParcelUuid.fromString("ddcc7766-9955-4433-aa22-33dd009955"+String.valueOf(num)+String.valueOf(num))).setIncludeDeviceName(name).setIncludeTxPowerLevel(true).build());
-                        //currentAdvertisingSet[0].setAdvertisingData(new AdvertiseData.Builder().addServiceUuid(ParcelUuid.fromString("ddcc7766-9955-4433-aa22-33dd009955"+String.valueOf(num)+String.valueOf(num))).setIncludeTxPowerLevel(true).build());
-                        //currentAdvertisingSet[0].setAdvertisingData(new AdvertiseData.Builder().addServiceData(ParcelUuid.fromString((byte)(mag_x >> 8)+(byte)mag_x+"ddcc7766-9955-4433-aa22-33dd0099"), service_data).setIncludeTxPowerLevel(true).build());
 
                         byte[] b = {(byte)(mag_x >> 8), (byte)(gyr_z), (byte)(gyr_z >> 8), (byte)(gyr_y), (byte)(gyr_y >> 8), (byte)(gyr_x), (byte)(gyr_x >> 8), (byte)(acc_z), (byte)(acc_z >> 8), (byte)(acc_y), (byte)(acc_y >> 8), (byte)(acc_x), (byte)(acc_x >> 8), (byte)(dev_id), (byte)(dev_id >> 8), seq_num};
                         ByteBuffer bb = ByteBuffer.wrap(b);
                         long f_l = bb.getLong();
                         long s_l = bb.getLong();
-                        UUID k = new UUID(f_l, s_l);
-                        ParcelUuid l = new ParcelUuid(k);
+                        UUID uuid_byte = new UUID(f_l, s_l);
+                        ParcelUuid l = new ParcelUuid(uuid_byte);
                         currentAdvertisingSet[0].setAdvertisingData(new AdvertiseData.Builder().addServiceData(l, service_data).setIncludeTxPowerLevel(false).build());
-                        //currentAdvertisingSet[0].setAdvertisingData(new AdvertiseData.Builder().addServiceData(ParcelUuid.fromString((acc_x >> 8)+(acc_x)+(acc_y >> 8)+(acc_y)+(acc_z >> 8)+(acc_z)+(mag_x >> 8)+(mag_x)+"-9955-4433-aa22-33dd009955cc"), service_data).setIncludeTxPowerLevel(true).build());
 
                         seq_num += 1;
                         try {
@@ -220,7 +210,6 @@ public class MainActivity extends AppCompatActivity {
             }
         };
         mThread.start();
-        //currentAdvertisingSet[0].setAdvertisingData(new AdvertiseData.Builder().setIncludeDeviceName(true).setIncludeTxPowerLevel(true).build());
 
     }
 
