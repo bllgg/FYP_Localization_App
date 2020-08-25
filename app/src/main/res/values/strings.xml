@@ -1,3 +1,6 @@
 <resources>
     <string name="app_name">GAP_adv</string>
+    <string name="acc_data">Acc_data</string>
+    <string name="gyro_data">Gyro_data</string>
+    <string name="mag_data">Mag_data</string>
 </resources>

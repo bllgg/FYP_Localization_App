@@ -3,6 +3,7 @@ package com.lahiru.gap_adv;
 import androidx.annotation.RequiresApi;
 import androidx.appcompat.app.AppCompatActivity;
 
+import android.annotation.SuppressLint;
 import android.bluetooth.BluetoothAdapter;
 import android.bluetooth.le.AdvertiseCallback;
 import android.bluetooth.le.AdvertiseData;
@@ -20,6 +21,7 @@ import android.os.Build;
 import android.os.Bundle;
 import android.os.ParcelUuid;
 import android.util.Log;
+import android.widget.TextView;
 import android.widget.Toast;
 
 import java.nio.ByteBuffer;
@@ -32,7 +34,7 @@ public class MainActivity extends AppCompatActivity {
 
     protected static byte seq_num = 0;
     protected static final short dev_id = 0x00FF;
-
+    TextView acc_text, gyro_text, mag_text;
 
     /////////////////////////////////////////////////////////////////////////////
 
@@ -45,6 +47,7 @@ public class MainActivity extends AppCompatActivity {
     SensorEventListener sel_gyro = new SensorEventListener(){
         @Override
         public void onAccuracyChanged(Sensor sensor, int accuracy) {}
+        @SuppressLint("SetTextI18n")
         @Override
         public void onSensorChanged(SensorEvent event) {
             float[] values = event.values;
@@ -52,12 +55,15 @@ public class MainActivity extends AppCompatActivity {
             gyr_x = gyro_revert(values[0]);
             gyr_y = gyro_revert(values[1]);
             gyr_z = gyro_revert(values[2]);
+
+            gyro_text.setText("GYROSCOPE\nx axis: "+values[0]+"\ny axis: "+values[1]+"\nz axis: "+values[2]);
         }
     };
 
     SensorEventListener sel_mag = new SensorEventListener(){
         @Override
         public void onAccuracyChanged(Sensor sensor, int accuracy) {}
+        @SuppressLint("SetTextI18n")
         @Override
         public void onSensorChanged(SensorEvent event) {
             float[] values = event.values;
@@ -65,19 +71,24 @@ public class MainActivity extends AppCompatActivity {
             mag_x = mag_revert(values[0]);
             mag_y = mag_revert(values[1]);
             mag_z = mag_revert(values[2]);
+
+            mag_text.setText("MAGNETOMETER\nx axis: "+values[0]+"\ny axis: "+values[1]+"\nz axis: "+values[2]);
         }
     };
 
     SensorEventListener sel_acc = new SensorEventListener() {
         @Override
         public void onAccuracyChanged(Sensor sensor, int accuracy) {}
+        @SuppressLint("SetTextI18n")
         @Override
         public void onSensorChanged(SensorEvent event) {
             float[] values = event.values;
-            
+
             acc_x = acc_revert(values[0]);
             acc_y = acc_revert(values[1]);
             acc_z = acc_revert(values[2]);
+
+            acc_text.setText("ACCELERATION\nx axis: "+values[0]+"\ny axis: "+values[1]+"\nz axis: "+values[2]);
         }
     };
     ////////////////////////////////////////////////////////////////////////////
@@ -92,26 +103,31 @@ public class MainActivity extends AppCompatActivity {
 
         ////////////////////////////////////////////////////////////////////////////////////
         sensorManager = (SensorManager) getSystemService(Context.SENSOR_SERVICE);
+        assert sensorManager != null;
         sensor = sensorManager.getDefaultSensor(Sensor.TYPE_MAGNETIC_FIELD);
+
+        acc_text = findViewById(R.id.acc_txt);
+        gyro_text = findViewById(R.id.gyro_txt);
+        mag_text = findViewById(R.id.mag_txt);
 
         list_mag = sensorManager.getSensorList(Sensor.TYPE_MAGNETIC_FIELD);
         list_acc = sensorManager.getSensorList(Sensor.TYPE_ACCELEROMETER);
         list_gyro = sensorManager.getSensorList(Sensor.TYPE_GYROSCOPE);
 
         if(list_acc.size()>0){
-            sensorManager.registerListener(sel_acc, (Sensor) list_acc.get(0), SensorManager.SENSOR_DELAY_FASTEST); // in here we register the sensors to the variables.
+            sensorManager.registerListener(sel_acc, (Sensor) list_acc.get(0), SensorManager.SENSOR_DELAY_NORMAL); // in here we register the sensors to the variables.
         }else{
             Toast.makeText(getBaseContext(), "Error: No Accelerometer.", Toast.LENGTH_LONG).show();
         }
 
         if(list_mag.size()>0){
-            sensorManager.registerListener(sel_mag, (Sensor) list_mag.get(0), SensorManager.SENSOR_DELAY_FASTEST); // in here we register the sensors to the variables.
+            sensorManager.registerListener(sel_mag, (Sensor) list_mag.get(0), SensorManager.SENSOR_DELAY_UI); // in here we register the sensors to the variables.
         }else{
             Toast.makeText(getBaseContext(), "Error: No Magnetometer.", Toast.LENGTH_LONG).show();
         }
 
         if(list_gyro.size()>0){
-            sensorManager.registerListener(sel_gyro, (Sensor) list_gyro.get(0), SensorManager.SENSOR_DELAY_FASTEST);  // here also we register the sensors to the variables.
+            sensorManager.registerListener(sel_gyro, (Sensor) list_gyro.get(0), SensorManager.SENSOR_DELAY_UI);  // here also we register the sensors to the variables.
         }else{
             Toast.makeText(getBaseContext(), "Error: No Gyroscope.", Toast.LENGTH_LONG).show();
         }
@@ -129,7 +145,7 @@ public class MainActivity extends AppCompatActivity {
                 .setLegacyMode(true) // True by default, but set here as a reminder.
                 .setConnectable(false)
                 .setInterval(AdvertisingSetParameters.INTERVAL_HIGH)
-                .setTxPowerLevel(AdvertisingSetParameters.TX_POWER_MEDIUM)
+                .setTxPowerLevel(AdvertisingSetParameters.TX_POWER_HIGH)
                 .build();
 
         /*
