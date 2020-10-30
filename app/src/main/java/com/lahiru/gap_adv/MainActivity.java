@@ -52,9 +52,13 @@ public class MainActivity extends AppCompatActivity {
         public void onSensorChanged(SensorEvent event) {
             float[] values = event.values;
 
-            gyr_x = gyro_revert(values[0]);
-            gyr_y = gyro_revert(values[1]);
-            gyr_z = gyro_revert(values[2]);
+            double x_value, y_value, z_value;
+            x_value = values[0];// - 0.005752;
+            y_value = values[1];// - 0.002984;
+            z_value = values[2];// + 0.000311;
+            gyr_x = gyro_revert(x_value);
+            gyr_y = gyro_revert(y_value);
+            gyr_z = gyro_revert(z_value);
 
             gyro_text.setText("GYROSCOPE\nx axis: "+values[0]+"\ny axis: "+values[1]+"\nz axis: "+values[2]);
         }
@@ -84,11 +88,17 @@ public class MainActivity extends AppCompatActivity {
         public void onSensorChanged(SensorEvent event) {
             float[] values = event.values;
 
-            acc_x = acc_revert(values[0]);
-            acc_y = acc_revert(values[1]);
-            acc_z = acc_revert(values[2]);
+            double x_value, y_value, z_value;
+            x_value = 1.008 * values[0] - 0.1803;
+            y_value = 1.011 * values[1] + 0.492;
+            z_value = 0.999 * values[2] - 0.3397;
 
-            acc_text.setText("ACCELERATION\nx axis: "+values[0]+"\ny axis: "+values[1]+"\nz axis: "+values[2]);
+            acc_x = acc_revert(x_value);
+            acc_y = acc_revert(y_value);
+            acc_z = acc_revert(z_value);
+
+//            acc_text.setText("ACCELERATION\nx axis: "+values[0]+"\ny axis: "+values[1]+"\nz axis: "+values[2]);
+            acc_text.setText("ACCELERATION\nx axis: "+x_value+" "+acc_x+"\ny axis: "+y_value+" "+acc_y+"\nz axis: "+z_value+" "+acc_z);
         }
     };
     ////////////////////////////////////////////////////////////////////////////
@@ -144,7 +154,7 @@ public class MainActivity extends AppCompatActivity {
         AdvertisingSetParameters parameters = (new AdvertisingSetParameters.Builder())
                 .setLegacyMode(true) // True by default, but set here as a reminder.
                 .setConnectable(false)
-                .setInterval(AdvertisingSetParameters.INTERVAL_HIGH)
+                .setInterval(AdvertisingSetParameters.INTERVAL_LOW)
                 .setTxPowerLevel(AdvertisingSetParameters.TX_POWER_HIGH)
                 .build();
 
@@ -197,8 +207,8 @@ public class MainActivity extends AppCompatActivity {
 
                         byte[] service_data = {(byte)(mag_x), (byte)(mag_y >> 8), (byte)(mag_y), (byte)(mag_z >> 8), (byte)(mag_z)};
 
-                        byte[] b = {(byte)(mag_x >> 8), (byte)(gyr_z), (byte)(gyr_z >> 8), (byte)(gyr_y), (byte)(gyr_y >> 8), (byte)(gyr_x), (byte)(gyr_x >> 8), (byte)(acc_z), (byte)(acc_z >> 8), (byte)(acc_y), (byte)(acc_y >> 8), (byte)(acc_x), (byte)(acc_x >> 8), (byte)(dev_id), (byte)(dev_id >> 8), seq_num};
-                        ByteBuffer bb = ByteBuffer.wrap(b);
+                        byte[] data_array = {(byte)(mag_x >> 8), (byte)(gyr_z), (byte)(gyr_z >> 8), (byte)(gyr_y), (byte)(gyr_y >> 8), (byte)(gyr_x), (byte)(gyr_x >> 8), (byte)(acc_z), (byte)(acc_z >> 8), (byte)(acc_y), (byte)(acc_y >> 8), (byte)(acc_x), (byte)(acc_x >> 8), (byte)(dev_id), (byte)(dev_id >> 8), seq_num};
+                        ByteBuffer bb = ByteBuffer.wrap(data_array);
                         long f_l = bb.getLong();
                         long s_l = bb.getLong();
                         UUID uuid_byte = new UUID(f_l, s_l);
@@ -208,7 +218,7 @@ public class MainActivity extends AppCompatActivity {
                         seq_num += 1;
                         try {
                             synchronized (this) {
-                                this.wait(2000);
+                                this.wait(100);
                             }
                         } catch (InterruptedException e) {
                             e.printStackTrace();
@@ -245,21 +255,29 @@ public class MainActivity extends AppCompatActivity {
         super.onStop();
     }
 
-    static short acc_revert(float data) {
+    static short acc_revert(double data) {
         short res;
-        res = (short) ((data) * (32768.0 / 16.0));
-        return res;
+        short reverese_res;
+        res = (short) ((data / 9.81) * (32768.0 / 16.0));
+//        res = 0;
+        reverese_res = (short) ((short) ((res >> 8) & 0xff) | ((res & 0xff) << 8));
+        return reverese_res;
     }
 
-    static short gyro_revert(float data){
+    static short gyro_revert(double data){
         short res;
-        res = (short) ((data) * (32768.0 / 250.0));
-        return res;
+        short reverese_res;
+        res = (short) ((data * (180/Math.PI)) * (32768.0 / 500.0));
+        reverese_res = (short) ((short) ((res >> 8) & 0xff) | ((res & 0xff) << 8));
+        return reverese_res;
     }
 
     static short mag_revert(float data) {
         short res;
-        res = (short) ((data) * (32768.0 / 300.0));
-        return res;
+        short reverese_res;
+        int resu = (int)(data * 10);
+        res = (short)resu;
+        reverese_res = (short) ((short) ((res >> 8) & 0xff) | ((res & 0xff) << 8));
+        return reverese_res;
     }
 }
